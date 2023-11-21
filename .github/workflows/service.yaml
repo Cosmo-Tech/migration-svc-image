@@ -1,8 +1,11 @@
 name: Create image and publish
 
 on:
-  create:
-  workflow_dispatch:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "*"
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
