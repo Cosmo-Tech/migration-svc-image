@@ -1,0 +1,10 @@
+azure-kusto-data
+azure-storage-blob
+azure-mgmt-kusto
+azure-mgmt-storage
+azure-mgmt-resource
+azure-identity
+pyyaml
+fastapi
+uvicorn
+redis
