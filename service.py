@@ -1,7 +1,7 @@
 from uvicorn import run
 from multiprocessing import Process
 from multiprocessing import set_start_method
-from fastapi import FastAPI, Request, Response
+from fastapi import FastAPI, Request
 from common import BodyKusto, BodyStorage
 from kusto import run_kusto
 from kusto_test import count_dest_table
@@ -15,9 +15,8 @@ app = FastAPI()
 
 
 @app.post("/storages")
-def storage(request: Request, response: Response, body: BodyStorage):
+def storage(request: Request, body: BodyStorage):
     if "Csm-Key" not in request.headers:
-        response.status_code(403)
         return {"error": "csm-key"}
     p = Process(target=run_storage, args=(body,))
     p.start()
@@ -25,9 +24,8 @@ def storage(request: Request, response: Response, body: BodyStorage):
 
 
 @app.post("/kustos")
-def kusto(request: Request, response: Response, body: BodyKusto):
+def kusto(request: Request, body: BodyKusto):
     if "Csm-Key" not in request.headers:
-        response.status_code(403)
         return {"error": "csm-key"}
     p = Process(target=run_kusto, args=(body,))
     p.start()
@@ -35,9 +33,8 @@ def kusto(request: Request, response: Response, body: BodyKusto):
 
 
 @app.post("/kustos/test")
-def kustotest(request: Request, response: Response, body: BodyKusto):
+def kustotest(request: Request, body: BodyKusto):
     if "Csm-Key" not in request.headers:
-        response.status_code(403)
         return {"error": "csm-key"}
     databases = body.databases
     for db in databases:
@@ -54,9 +51,8 @@ def kustotest(request: Request, response: Response, body: BodyKusto):
 
 
 @app.patch("/solutions")
-def solution(request: Request, response: Response):
+def solution(request: Request):
     if "Csm-Key" not in request.headers:
-        response.status_code(403)
         return {"error": "csm-key"}
     client = CsmJsonRedisClient()
     solutions = handler(client)
