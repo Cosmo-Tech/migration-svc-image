@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: csm-deployment
+  labels:
+    app: csmmigration
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: csmmigration
+  template:
+    metadata:
+      labels:
+        app: csmmigration
+    spec:
+      containers:
+      - name: csmmigration
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          readOnlyRootFilesystem: true
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - name: csm-port
+          containerPort: 8000
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 128Mi
+          requests:
+            cpu: 1000m
+            memory: 128Mi          
+        env:
+        - name: SRC_CLUSTER
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: SRC_CLUSTER
+        - name: SRC_RESOURCE_GROUP
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: SRC_RESOURCE_GROUP
+        - name: SRC_ACCOUNT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: SRC_ACCOUNT_KEY
+        - name: DEST_CLUSTER
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: DEST_CLUSTER
+        - name: DEST_RESOURCE_GROUP
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: DEST_RESOURCE_GROUP
+        - name: DEST_ACCOUNT_KEY
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: DEST_ACCOUNT_KEY
+        - name: MIGRATION_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: MIGRATION_CLIENT_ID
+        - name: MIGRATION_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: MIGRATION_CLIENT_SECRET
+        - name: AZURE_SUBSCRIPTION_ID
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: AZURE_SUBSCRIPTION_ID
+        - name: AZURE_TENANT_ID
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: AZURE_TENANT_ID
+        - name: ACCOUNT_EXPORT_NAME
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: ACCOUNT_EXPORT_NAME
+        - name: ACCOUNT_EXPORT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: ACCOUNT_EXPORT_SECRET
+        - name: REDIS_HOST
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: REDIS_HOST
+        - name: REDIS_PORT
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: REDIS_PORT
+        - name: REDIS_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: REDIS_USERNAME
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: REDIS_PASSWORD
+        - name: CSM_KEY
+          valueFrom:
+            secretKeyRef:
+              name: csm-secret
+              key: CSM_KEY
