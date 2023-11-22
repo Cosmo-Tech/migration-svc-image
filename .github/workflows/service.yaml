@@ -66,14 +66,14 @@ jobs:
       - name: Push Helm Chart (tag) to GitHub Container Registry
         if: startsWith(github.ref, 'refs/tags/')
         run: |
-          helm chart save charts/csm-migration ghcr.io/cosmo-tech/migration-svc-chart:${{ steps.refvar.outputs.gitRefName }}
-          helm chart push ghcr.io/cosmo-tech/migration-svc-chart:${{ steps.refvar.outputs.gitRefName }}
+          helm chart save charts/csm-migration ghcr.io/cosmo-tech/migration-svc-charts:${{ steps.refvar.outputs.gitRefName }}
+          helm chart push ghcr.io/cosmo-tech/migration-svc-charts:${{ steps.refvar.outputs.gitRefName }}
 
       - name: Push Helm Chart (latest) to GitHub Container Registry
         if: github.ref == 'refs/heads/main'
         run: |
-          helm chart save charts/csm-migration ghcr.io/cosmo-tech/migration-svc-chart:latest
-          helm chart push ghcr.io/cosmo-tech/migration-svc-chart:latest
+          helm chart save charts/csm-migration ghcr.io/cosmo-tech/migration-svc-charts:latest
+          helm chart push ghcr.io/cosmo-tech/migration-svc-charts:latest
 
       - name: Logout from GitHub Container Registry
         if: ${{ always() }}
