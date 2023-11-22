@@ -102,6 +102,8 @@ def create_external_tables_in_source_database(
             res = client_source.execute_mgmt(database, query)
         except Exception:
             pass
+        if not res:
+            return results
         data = res.primary_results[0].to_dict()
         for row in data['data']:
             tb = row['TableName']
@@ -122,6 +124,8 @@ dataformat=csv
 """
             try:
                 response = client_source.execute_mgmt(database, query)
+                if not response:
+                    continue
                 data = response.primary_results[0].to_dict()
                 for t in data['data']:
                     print(f"{t['TableName']} created")
@@ -173,12 +177,16 @@ def get_schema_as_csl(
     with KustoClient(src_kcsb_client) as client_source:
         query = """
 .show database schema as csl script with (ShowObfuscatedStrings = true)"""
-        tables = client_source.execute_mgmt(database, query)
-        data = tables.primary_results[0].to_dict()
-        for item in data['data']:
-            item = item['DatabaseSchemaScript']
-            scripts.append(item)
-    return scripts
+        try:
+            tables = client_source.execute_mgmt(database, query)
+            data = tables.primary_results[0].to_dict()
+            for item in data['data']:
+                item = item['DatabaseSchemaScript']
+                scripts.append(item)
+        except Exception as exp:
+            print(exp)
+            pass
+        return scripts
 
 
 def drop_external_table(
@@ -203,27 +211,38 @@ def get_external_tables(
     src_kcsb_client = kusto_client(source=True)
     with KustoClient(src_kcsb_client) as client_source:
         query = """.show external tables"""
-        tables = client_source.execute_mgmt(database, query)
-        data = tables.primary_results[0].to_dict()
-        for t in data['data']:
-            external_tables.append(t['TableName'])
+        try:
+            tables = client_source.execute_mgmt(database, query)
+            if not tables:
+                return external_tables
+            data = tables.primary_results[0].to_dict()
+            for t in data['data']:
+                external_tables.append(t['TableName'])
+        except Exception as exp:
+            print(exp)
+            return external_tables
     return external_tables
 
 
 def clone_database(
     database: str,
     list_scripts: list
-):
+) -> bool:
     print("-- Clone schemas database --")
     dest_kcsb_client = kusto_client(source=False)
     with KustoClient(dest_kcsb_client) as client_dest:
+        if not len(list_scripts):
+            return False
         for query in list_scripts:
             try:
                 result = client_dest.execute_mgmt(database, query)
+                if not result:
+                    continue
                 result.primary_results[0].to_dict()
+                return True
             except Exception as exp:
                 print(exp)
-                return
+                break
 
 
 def ingest_data(
@@ -244,6 +263,8 @@ def ingest_data(
 """
                 print(query)
                 response = client_dest.execute_mgmt(database, query)
+                if not response:
+                    return False
                 data = response.primary_results[0].to_dict()
                 for d in data['data']:
                     if d['HasErrors']:
@@ -395,16 +416,16 @@ def ingest(
     data: dict,
     ext_table: str,
     container: str
-):
+) -> bool:
     imported_tables = data['steps'][4]['tables']
     try:
         if container in imported_tables:
-            return
+            return False
         container_client = export_blob_client.get_container_client(
             container=container
         )
         if not container_client.exists():
-            return
+            return False
         blobs = container_client.list_blobs()
         for b in blobs:
             sas = generate_sas_token(
@@ -431,12 +452,12 @@ def ingest(
         data['steps'][4]['tables'] = imported_tables
         data['steps'][4]['state'] = len(ext_tables) == (len(imported_tables))
         save_history(data=data, database=database)
+        return True
     except Exception as exp:
         print(exp)
 
 
-def clone(data: dict):
-    database = data['database']
+def clone(data: dict, database: str):
     list_scripts = get_schema_as_csl(
         database=database
     )
@@ -522,7 +543,26 @@ def init(
 
 
 @pass_kusto_mgmt_client
-def check_database(
+def check_database_in_src(
+    mgmt: KustoManagementClient,
+    database: str
+) -> bool:
+    args = pars_env()
+    try:
+        rg = args.get('SRC_RESOURCE_GROUP')
+        cluster_name, _ = get_cluster_values(source=True)
+        mgmt.databases.get(
+            resource_group_name=rg,
+            cluster_name=cluster_name,
+            database_name=database
+        )
+        return True
+    except Exception:
+        return False
+
+
+@pass_kusto_mgmt_client
+def check_database_in_dest(
     mgmt: KustoManagementClient,
     database: str
 ) -> bool:
@@ -535,9 +575,9 @@ def check_database(
             cluster_name=cluster_name,
             database_name=database
         )
-        return False
-    except Exception:
         return True
+    except Exception:
+        return False
 
 
 def get_cluster_values(source: bool):
@@ -563,11 +603,15 @@ def run_kusto(body: BodyKusto):
         data: dict = retrieve_state(database=db)
         data.update({"start": time.time()})
         data.update({"database": db})
+        ok = check_database_in_src(database=db)
+        if not ok:
+            print(f"{db} database not found")
+            continue
         if '--kusto-iam' in steps:
             iam_set(database=db)
         if '--kusto-create' in steps:
-            ok = check_database(database=db)
-            if not ok:
+            ok = check_database_in_dest(database=db)
+            if ok:
                 print(f"{db} already exists")
             else:
                 create_kusto_database_in_dest(database=db)
@@ -580,8 +624,14 @@ def run_kusto(body: BodyKusto):
                 print(f"database {db} not exported yet")
                 print("please add --kusto-export flag in steps")
                 continue
-            clone(data=data)
-            print("successfully cloned")
+            ok = check_database_in_dest(database=db)
+            if not ok:
+                print(f"{db} not created yet")
+                print("please add --kusto-create flag in steps")
+                continue
+            ok = clone(data=data, database=db)
+            if ok:
+                print("successfully cloned")
         if '--kusto-ingest' in steps:
             if not data['steps'][3]['state']:
                 print(f"database {db} not cloned yet")
@@ -590,12 +640,13 @@ def run_kusto(body: BodyKusto):
             dictionary_tables = data['steps'][0]['tables']
             for item in dictionary_tables:
                 try:
-                    ingest(
+                    ok = ingest(
                         database=db,
                         data=data,
                         ext_table=item.get('table'),
                         container=item.get('id')
                     )
+                    if ok:
+                        print("successfully ingested")
                 except Exception:
                     continue
-            print("successfully ingested")

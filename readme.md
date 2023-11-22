@@ -32,7 +32,7 @@
 ## Pull helm chart 
 
 ```bash
-helm pull oci://ghcr.io/cosmo-tech/migration-svc-chart --version <version>
+helm pull oci://ghcr.io/cosmo-tech/migration-svc-charts --version <version>
 ```
 
 ## Setup values.yaml
@@ -67,7 +67,7 @@ env:
 
 ```bash
 kubectl config use-context <CONTEXT>
-helm -n <namespace> install -f values.yaml csm-migration-svc migration-svc-chart-<version>.tgz
+helm -n <namespace> install -f values.yaml csm-migration-svc migration-svc-charts-<version>.tgz
 ```
 
 ## Clean up
