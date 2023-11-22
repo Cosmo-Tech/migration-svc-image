@@ -44,10 +44,10 @@ image:
   repository: ghcr.io/cosmo-tech/migration-svc-image
   tag: <version>
 env:
-  SRC_CLUSTER: <SRC_CLUSTER_URI> e.g. https://<CLUSTER_NAME>.<LOCATION>.kusto.windows.com
+  SRC_CLUSTER: <SRC_CLUSTER_URI> e.g. https://<CLUSTER_NAME>.<LOCATION>.kusto.windows.net
   SRC_RESOURCE_GROUP: <SRC_RESOURCE_GROUP_NAME>
   SRC_ACCOUNT_KEY: <SRC_ACCOUNT_KEY> 
-  DEST_CLUSTER: <DEST_CLUSTER_URI> e.g. https://<CLUSTER_NAME>.<LOCATION>.kusto.windows.com 
+  DEST_CLUSTER: <DEST_CLUSTER_URI> e.g. https://<CLUSTER_NAME>.<LOCATION>.kusto.windows.net 
   DEST_RESOURCE_GROUP: <DEST_RESOURCE_GROUP_NAME> 
   DEST_ACCOUNT_KEY: <DEST_ACCOUNT_KEY> 
   MIGRATION_CLIENT_ID: <MIGRATION_CLIENT_ID> 
