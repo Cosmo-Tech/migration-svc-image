@@ -1,6 +1,7 @@
 import os
 import redis
 import json
+
 from pydantic import BaseModel
 from redis.commands.search.query import Query
 
@@ -95,9 +96,9 @@ def handler(client: redis.Redis):
     except Exception as exp:
         print(exp)
         return solutions
-    # for sol in solutions:
-        # new_sol = handlerRunTemplatesCsmOrcWithSteps(sol)
-        # new_sol = handlerRunTemplatesCsmOrcWithMinus(sol)
-        # CsmJsonSet(client, sol['id'], new_sol)
+    for sol in solutions:
+        new_sol = handlerRunTemplatesCsmOrcWithSteps(sol)
+        new_sol = handlerRunTemplatesCsmOrcWithMinus(sol)
+        CsmJsonSet(client, sol['id'], new_sol)
     print("Successfully Completed")
     return solutions

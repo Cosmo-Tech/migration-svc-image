@@ -2,12 +2,11 @@
 
 ## Prerequisites
 
-* helm
-* docker
-* k9s
-
-
-* Create an app registration in azure portal
+* `helm`
+* `docker`
+* `k9s`
+* `Destination AKS cluster running`
+* `Create an app registration in azure portal`
 
     * Sign in to the Azure portal
     * Navigate to the Azure portal and select the Azure AD service
@@ -35,7 +34,7 @@
 helm pull oci://ghcr.io/cosmo-tech/migration-svc-charts --version <version>
 ```
 
-## Setup values.yaml
+## Fill values.yaml
 
 * Create a values.yaml with environment variables
 
@@ -63,12 +62,93 @@ env:
   CSM_KEY: <CSM_KEY>
   ```
 
-## Install helm chart
+## Install helm chart in destination AKS cluster
 
 ```bash
 kubectl config use-context <CONTEXT>
 helm -n <namespace> install -f values.yaml csm-migration-svc migration-svc-charts-<version>.tgz
 ```
+
+> Example:
+  * cluster name: phoenixAKSdev
+  * namepace: phoenix
+  * version: 1.0.5
+
+  ```bash
+  kubectl config use-context phoenixAKSdev
+  helm -n phoenix install -f values.yaml csm-migration-svc migration-svc-charts-1.0.5.tgz
+  ```
+
+## Migration endpoints
+
+### Kusto
+
+* List kusto databases from adx cluster source
+
+```bash
+az kusto database list --cluster-name MyCluster --resource-group MyResourceGroup -o json --query "[].name" > kustos.databases.json
+sed -i 's/<MyCluster>\///g' kustos.databases.json
+```
+
+> Example:
+  * cluster name: phoenixdev
+  * resource group: phoenixdev
+
+  ```bash
+  az kusto database list --cluster-name phoenixdev --resource-group phoenixdev -o json --query "[].name" > kustos.databases.json
+  sed -i 's/phoenixdev\///g' kustos.databases.json
+  ```
+
+* Replace the list `kustos.databases.json` in `databases` key
+
+- ENDPOINT: http://localhost:8080/kustos
+- HEADERS: `csm-key` is required
+- BODY:
+```json
+{
+    "title": "migration kusto database",
+    "steps": [
+        "--kusto-iam",
+        "--kusto-create",
+        "--kusto-export",
+        "--kusto-clone",
+        "--kusto-ingest",
+        "--overwrite"
+    ],
+    "databases": [
+        "database1",
+        "database2",
+        ...
+    ]
+}
+```
+
+### Storage
+
+- ENDPOINT: http://localhost:8080/storages
+- HEADERS: `csm-key` is required
+- BODY:
+```json
+{
+    "title": "migration storage",
+    "storage_src": "<STORAGE_SOURCE>",
+    "storage_dest": "<STORAGE_DESTINATION>"
+}
+```
+ 
+### Solutions
+
+- ENDPOINT: http://localhost:8080/solutions
+- HEADERS: `csm-key` is required
+- BODY:
+```json
+{
+    "title": "migration storage",
+    "storage_src": "<STORAGE_SOURCE>",
+    "storage_dest": "<STORAGE_DESTINATION>"
+}
+```
+
 
 ## Clean up
 
