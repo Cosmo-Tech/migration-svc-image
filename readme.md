@@ -68,13 +68,15 @@ env:
 
 ```bash
 kubectl config use-context <CONTEXT>
+```
+```bash
 helm -n <namespace> install -f values.yaml csm-migration-svc migration-svc-charts-<version>.tgz
 ```
 
 > Example:
   * cluster name: phoenixAKSdev
   * namepace: phoenix
-  * version: 1.0.5
+  * version: 1.0.7
 
   ```bash
   kubectl config use-context phoenixAKSdev
@@ -130,13 +132,16 @@ curl -X POST http://localhost:8080/kustos -H 'csm-key: <CSM-KEY>' -H 'Content-Ty
 
 ### Storage
 
+### Port forwarding
+
 ```bash
-curl -X POST http://localhost:8080/storages -H 'csm-key: <CSM-KEY>' -H 'Content-Type: application/json' -d '
-{
-    "title": "migration storage",
-    "storage_src": "<STORAGE_SOURCE>",
-    "storage_dest": "<STORAGE_DESTINATION>"
-}'
+namespace=<namespace>
+podstorage=$(kubectl -n $namespace get pods | grep csm-deployment | awk 'NR==1{print $1}')
+kubectl port-forward -n $namespace pod/$podstorage  8081:8000
+```
+
+```bash
+curl -X POST http://localhost:8081/storages -H 'csm-key: dGhpc2lzbWl1bHRyYXN1cGVyc2VjcmV0a2V5Zm9ybWlncmF0aW9uY3Nt' -H 'Content-Type: application/json' -d '{"title": "migration storage", "storage_src": "csmphoenixdev", "storage_dest": "arch4g2qoly1m89t8"}'
 ```
 
 ### Solutions

@@ -56,11 +56,19 @@ def CsmGetAllSolutions(client: redis.Redis) -> list[dict]:
 
 def handlerRunTemplatesCsmOrcWithMinus(sol: dict):
     rts: list[dict] = sol['runTemplates']
+    if not rts:
+        return sol
     for i, item in enumerate(rts):
-        if "csmMinusOrc" in item.get("orchestratorType"):
+        if "csmMinusOrc" == item.get("orchestratorType"):
             rts[i]['orchestratorType'] = "csmOrc"
-        if "argoMinusWorkflow" in item.get("orchestratorType"):
+        if "csm-orc" == item.get("orchestratorType"):
+            rts[i]['orchestratorType'] = "csmOrc"
+        if "argoMinusWorkflow" == item.get("orchestratorType"):
             rts[i]['orchestratorType'] = "argoWorkflow"
+        if "argo-workflow" == item.get("orchestratorType"):
+            rts[i]['orchestratorType'] = "argoWorkflow"
+    sol["runTemplates"] = rts
+    return sol
 
 
 def handlerRunTemplatesCsmOrcWithSteps(sol: dict):
@@ -68,10 +76,10 @@ def handlerRunTemplatesCsmOrcWithSteps(sol: dict):
     if not rts:
         return sol
     for i, item in enumerate(rts):
-        if item.get("orchestratorType") == "":
-            rts[i].get("orchestratorType") == "argoWorkflow"
+        if item.get("orchestratorType") is None:
+            rts[i]["orchestratorType"] = "argoWorkflow"
         if item.get("fetchDatasets") is None:
-            rts[i]["fetchDatasetes"] = True
+            rts[i]["fetchDatasets"] = True
         if item.get("fetchScenarioParameters") is None:
             rts[i]["fetchScenarioParameters"] = True
         if item.get("applyParameters") is None:
@@ -91,6 +99,7 @@ def handlerRunTemplatesCsmOrcWithSteps(sol: dict):
 
 
 def handler(client: redis.Redis):
+    results = []
     solutions = []
     try:
         solutions = CsmGetAllSolutions(client)
@@ -98,8 +107,9 @@ def handler(client: redis.Redis):
         print(exp)
         return solutions
     for sol in solutions:
-        new_sol = handlerRunTemplatesCsmOrcWithSteps(sol)
         new_sol = handlerRunTemplatesCsmOrcWithMinus(sol)
+        new_sol = handlerRunTemplatesCsmOrcWithSteps(new_sol)
         CsmJsonSet(client, sol['id'], new_sol)
+        results.append(new_sol)
     print("Successfully Completed")
-    return solutions
+    return results
