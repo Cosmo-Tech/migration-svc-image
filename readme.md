@@ -3,13 +3,11 @@
 ## Prerequisites
 
 * `helm`
-* `postman`
 * `docker`
 * `k9s`
 * `Destination AKS cluster running`
 * `Destination ADX cluster running`
 * `Create an app registration in azure portal`
-
     * Sign in to the Azure portal
     * Navigate to the Azure portal and select the Azure AD service
     * Select the App Registrations blade on the left, then select New registration
@@ -21,7 +19,6 @@
         * Create a client secret and note it. You use this value later.
 
 > **Important**    
-
 * Make sure to remove all permissions for all "`AAD object id failed to be resolved`" item in each database azure data explorer (if exists)
 * Make sure to assign with `system-assigned` all connections with event hubs in each database azure data explorer  
 * Assign the Owner role in resource group for source and destination platform
@@ -67,52 +64,66 @@ env:
 ## Install helm chart in destination AKS cluster
 
 ```bash
-kubectl config use-context <CONTEXT>
+kubectl config use-context <context>
 ```
 ```bash
 helm -n <namespace> install -f values.yaml csm-migration-svc migration-svc-charts-<version>.tgz
 ```
 
-> Example:
-  * cluster name: phoenixAKSdev
-  * namepace: phoenix
-  * version: 1.0.7
+### Storage
+---
 
-  ```bash
-  kubectl config use-context phoenixAKSdev
-  helm -n phoenix install -f values.yaml csm-migration-svc migration-svc-charts-1.0.5.tgz
-  ```
+* Port forwarding
+```bash
+namespace=<NAMESPACE>
+mypod=$(kubectl -n $namespace get pods | grep csm-deployment | awk 'NR==1{print $1}')
+kubectl port-forward -n $namespace pod/$mypod  8081:8000
+```
 
+* Run script
+```bash
+curl -X POST http://localhost:8081/storages -H 'csm-key: <CSM-KEY>' -H 'Content-Type: application/json' -d '{
+  "title": "migration storage", 
+  "storage_src": "<STORAGE_NAME_SOURCE>", 
+  "storage_dest": "STORAGE_NAME_DEST"
+}'
+```
 
-## Migration endpoints
+### Solutions
+
+* Port forwarding
+```bash
+namespace=<NAMESPACE>
+mypod=$(kubectl -n $namespace get pods | grep csm-deployment | awk 'NR==2{print $1}')
+kubectl port-forward -n $namespace pod/$mypod  8082:8000
+```
+
+* Run script
+```bash
+curl -X PATCH http://localhost:8082/solutions -H 'csm-key: <CSM-KEY>'
+```
 
 ### Kusto
 
 * List kusto databases from adx cluster source
 
 ```bash
-az kusto database list --cluster-name MyCluster --resource-group MyResourceGroup -o json --query "[].name" > kustos.databases.json
+az kusto database list --cluster-name <MyCluster> --resource-group <MyResourceGroup> -o json --query "[].name" > kustos.databases.json
 ```
 ```bash
+# remove <MyCluster> string
 sed -i 's/<MyCluster>\///g' kustos.databases.json
 ```
 
-> Example:
-  * cluster name: phoenixdev
-  * resource group: phoenixdev
-
+* Port forwarding
   ```bash
-  az kusto database list --cluster-name phoenixdev --resource-group phoenixdev -o json --query "[].name" > kustos.databases.json
+  namespace=<NAMESPACE>
+  mypod=$(kubectl -n $namespace get pods | grep csm-deployment | awk 'NR==3{print $1}')
+  kubectl port-forward -n $namespace pod/$mypod  8083:8000
   ```
-  ```bash
-  sed -i 's/phoenixdev\///g' kustos.databases.json
-  ```
-
-* Replace the list `kustos.databases.json` in `databases` key
-
+* Run script
 ```bash
-curl -X POST http://localhost:8080/kustos -H 'csm-key: <CSM-KEY>' -H 'Content-Type: application/json' -d '
-{
+curl -X POST http://localhost:8083/kustos -H 'csm-key: <CSM-KEY>' -H 'Content-Type: application/json' -d '{
     "title": "migration kusto database",
     "steps": [
         "--kusto-iam",
@@ -128,26 +139,6 @@ curl -X POST http://localhost:8080/kustos -H 'csm-key: <CSM-KEY>' -H 'Content-Ty
         ...
     ]
 }'
-```
-
-### Storage
-
-### Port forwarding
-
-```bash
-namespace=<namespace>
-podstorage=$(kubectl -n $namespace get pods | grep csm-deployment | awk 'NR==1{print $1}')
-kubectl port-forward -n $namespace pod/$podstorage  8081:8000
-```
-
-```bash
-curl -X POST http://localhost:8081/storages -H 'csm-key: dGhpc2lzbWl1bHRyYXN1cGVyc2VjcmV0a2V5Zm9ybWlncmF0aW9uY3Nt' -H 'Content-Type: application/json' -d '{"title": "migration storage", "storage_src": "csmphoenixdev", "storage_dest": "arch4g2qoly1m89t8"}'
-```
-
-### Solutions
-
-```bash
-curl -X PATCH http://localhost:8080/solutions -H 'csm-key: <CSM-KEY>'
 ```
 
 ## Clean up

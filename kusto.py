@@ -228,7 +228,7 @@ def clone_database(
     database: str,
     list_scripts: list
 ) -> bool:
-    print("-- Clone schemas database --")
+    print(f"-- Clone schemas database {database}--")
     dest_kcsb_client = kusto_client(source=False)
     with KustoClient(dest_kcsb_client) as client_dest:
         if not len(list_scripts):
@@ -238,11 +238,9 @@ def clone_database(
                 result = client_dest.execute_mgmt(database, query)
                 if not result:
                     continue
-                result.primary_results[0].to_dict()
-                return True
             except Exception as exp:
                 print(exp)
-                break
+                continue
 
 
 def ingest_data(
@@ -271,7 +269,7 @@ def ingest_data(
                         sys.exit(1)
                 return True
         except Exception as exp:
-            print(f"Error in: {exp}")
+            print(f"Error: {exp}")
             return False
 
 
@@ -461,13 +459,14 @@ def clone(data: dict, database: str):
     list_scripts = get_schema_as_csl(
         database=database
     )
-    clone_database(
+    ok = clone_database(
         database=database,
         list_scripts=list_scripts
     )
     data['steps'][3]['scripts'] = list_scripts
-    data['steps'][3]['state'] = True
+    data['steps'][3]['state'] = ok
     save_history(data=data, database=database)
+    return ok
 
 
 @pass_kusto_mgmt_client
@@ -620,18 +619,15 @@ def run_kusto(body: BodyKusto):
             export(data=data, database=db)
             print("successfully exported")
         if '--kusto-clone' in steps:
-            if not data['steps'][2]['state']:
-                print(f"database {db} not exported yet")
-                print("please add --kusto-export flag in steps")
-                continue
             ok = check_database_in_dest(database=db)
             if not ok:
                 print(f"{db} not created yet")
                 print("please add --kusto-create flag in steps")
                 continue
             ok = clone(data=data, database=db)
-            if ok:
-                print("successfully cloned")
+            if not ok:
+                continue
+            print("successfully cloned")
         if '--kusto-ingest' in steps:
             if not data['steps'][3]['state']:
                 print(f"database {db} not cloned yet")
