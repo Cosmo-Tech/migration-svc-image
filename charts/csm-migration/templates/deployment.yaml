@@ -5,7 +5,7 @@ metadata:
   labels:
     app: csmmigration
 spec:
-  replicas: 3
+  replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app: csmmigration
@@ -20,7 +20,7 @@ spec:
         operator: Equal
         value: cosmotech
       nodeSelector:
-        cosmotech.com/size: highcpu
+        cosmotech.com/size: {{ .Values.nodeSize }}
       containers:
       - name: csmmigration
         imagePullPolicy: IfNotPresent
@@ -31,12 +31,7 @@ spec:
         - name: csm-port
           containerPort: 8000
         resources:
-          limits:
-            cpu: "1"
-            memory: "1Gi"
-          requests:
-            cpu: "1"
-            memory: "1Gi"
+          {{- toYaml .Values.resources | nindent 10 }}
         env:
         - name: SRC_CLUSTER
           valueFrom:
