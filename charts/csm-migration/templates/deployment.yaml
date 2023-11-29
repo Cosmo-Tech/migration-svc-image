@@ -14,8 +14,6 @@ spec:
       labels:
         app: csmmigration
     spec:
-      nodeSelector:
-        cosmotech.com/tier: compute 
       containers:
       - name: csmmigration
         imagePullPolicy: IfNotPresent
