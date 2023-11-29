@@ -14,8 +14,13 @@ spec:
       labels:
         app: csmmigration
     spec:
+      tolerations:
+      - effect: NoSchedule
+        key: vendor
+        operator: Equal
+        value: cosmotech
       nodeSelector:
-        cosmotech.com/tier: compute 
+        cosmotech.com/size: highcpu
       containers:
       - name: csmmigration
         imagePullPolicy: IfNotPresent
