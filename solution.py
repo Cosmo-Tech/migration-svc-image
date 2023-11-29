@@ -55,38 +55,39 @@ def CsmGetAllSolutions(client: redis.Redis) -> list[dict]:
 
 
 def handlerRunTemplatesCsmOrcWithMinus(sol: dict):
-    rts = sol['runTemplates']
+    rts: list[dict] = sol['runTemplates']
     for i, item in enumerate(rts):
-        if "csmMinusOrc" in item["orchestratorType"]:
+        if "csmMinusOrc" in item.get("orchestratorType"):
             rts[i]['orchestratorType'] = "csmOrc"
-        if "argoMinusWorkflow" in item["orchestratorType"]:
+        if "argoMinusWorkflow" in item.get("orchestratorType"):
             rts[i]['orchestratorType'] = "argoWorkflow"
 
 
 def handlerRunTemplatesCsmOrcWithSteps(sol: dict):
-    rts: list = sol["runTemplates"]
+    rts: list[dict] = sol.get("runTemplates")
+    if not rts:
+        return sol
     for i, item in enumerate(rts):
-        if item["orchestratorType"] == "":
-            rts[i]['orchestratorType'] == "argoWorkflow"
-        if item["fetchDatasets"] is None:
-            rts[i]['fetchDatasets'] = True
-        if item["fetchScenarioParameters"] is None:
-            rts[i]['fetchScenarioParameters'] = True
-        if item["applyParameters"] is None:
-            rts[i]['applyParameters'] = True
-        if item["sendDatasetsToDataWarehouse"] is None:
-            rts[i]['sendDatasetsToDataWarehouse'] = True
-        if item["sendInputParametersToDataWarehouse"] is None:
-            rts[i]['sendInputParametersToDataWarehouse'] = True
-        if item["preRun"] is None:
-            rts[i]['preRun'] = True
-        if item["run"] is None:
+        if item.get("orchestratorType") == "":
+            rts[i].get("orchestratorType") == "argoWorkflow"
+        if item.get("fetchDatasets") is None:
+            rts[i]["fetchDatasetes"] = True
+        if item.get("fetchScenarioParameters") is None:
+            rts[i]["fetchScenarioParameters"] = True
+        if item.get("applyParameters") is None:
+            rts[i]["applyParameters"] = True
+        if item.get("sendDatasetsToDataWarehouse") is None:
+            rts[i]["sendDatasetsToDataWarehouse"] = True
+        if item.get("sendInputParametersToDataWarehouse") is None:
+            rts[i]["sendInputParametersToDataWarehouse"] = True
+        if item.get("preRun") is None:
+            rts[i]["preRun"] = True
+        if item.get("run") is None:
             rts[i]['run'] = True
-        if item["postRun"] is None:
+        if item.get("postRun") is None:
             rts[i]['postRun'] = True
-
-    new_sol = sol["runTemplates"] = rts
-    return new_sol
+    sol["runTemplates"] = rts
+    return sol
 
 
 def handler(client: redis.Redis):

@@ -1,5 +1,4 @@
 from uvicorn import run
-from multiprocessing import Process
 from multiprocessing import set_start_method
 from fastapi import FastAPI, Request
 from common import BodyKusto, BodyStorage
@@ -18,8 +17,7 @@ app = FastAPI()
 def storage(request: Request, body: BodyStorage):
     if "Csm-Key" not in request.headers:
         return {"error": "csm-key"}
-    p = Process(target=run_storage, args=(body,))
-    p.start()
+    run_storage(body)
     return {"result": body}
 
 
@@ -27,8 +25,7 @@ def storage(request: Request, body: BodyStorage):
 def kusto(request: Request, body: BodyKusto):
     if "Csm-Key" not in request.headers:
         return {"error": "csm-key"}
-    p = Process(target=run_kusto, args=(body,))
-    p.start()
+    run_kusto(body)
     return {"result": body}
 
 
@@ -37,6 +34,8 @@ def kustotest(request: Request, body: BodyKusto):
     if "Csm-Key" not in request.headers:
         return {"error": "csm-key"}
     databases = body.databases
+    if not len(databases):
+        return {"result": None}
     for db in databases:
         tables_dest = get_dest_tables_from_adx(
             database=db

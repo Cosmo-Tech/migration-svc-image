@@ -5,7 +5,7 @@ metadata:
   labels:
     app: csmmigration
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: csmmigration
@@ -25,11 +25,11 @@ spec:
           containerPort: 8000
         resources:
           limits:
-            cpu: 1000m
-            memory: 128Mi
+            cpu: "1"
+            memory: "1Gi"
           requests:
-            cpu: 1000m
-            memory: 128Mi          
+            cpu: "1"
+            memory: "1Gi"          
         env:
         - name: SRC_CLUSTER
           valueFrom:

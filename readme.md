@@ -3,9 +3,11 @@
 ## Prerequisites
 
 * `helm`
+* `postman`
 * `docker`
 * `k9s`
 * `Destination AKS cluster running`
+* `Destination ADX cluster running`
 * `Create an app registration in azure portal`
 
     * Sign in to the Azure portal
@@ -79,6 +81,7 @@ helm -n <namespace> install -f values.yaml csm-migration-svc migration-svc-chart
   helm -n phoenix install -f values.yaml csm-migration-svc migration-svc-charts-1.0.5.tgz
   ```
 
+
 ## Migration endpoints
 
 ### Kusto
@@ -87,6 +90,8 @@ helm -n <namespace> install -f values.yaml csm-migration-svc migration-svc-chart
 
 ```bash
 az kusto database list --cluster-name MyCluster --resource-group MyResourceGroup -o json --query "[].name" > kustos.databases.json
+```
+```bash
 sed -i 's/<MyCluster>\///g' kustos.databases.json
 ```
 
@@ -96,15 +101,15 @@ sed -i 's/<MyCluster>\///g' kustos.databases.json
 
   ```bash
   az kusto database list --cluster-name phoenixdev --resource-group phoenixdev -o json --query "[].name" > kustos.databases.json
+  ```
+  ```bash
   sed -i 's/phoenixdev\///g' kustos.databases.json
   ```
 
 * Replace the list `kustos.databases.json` in `databases` key
 
-- ENDPOINT: http://localhost:8080/kustos
-- HEADERS: `csm-key` is required
-- BODY:
-```json
+```bash
+curl -X POST http://localhost:8080/kustos -H 'csm-key: <CSM-KEY>' -H 'Content-Type: application/json' -d '
 {
     "title": "migration kusto database",
     "steps": [
@@ -120,35 +125,25 @@ sed -i 's/<MyCluster>\///g' kustos.databases.json
         "database2",
         ...
     ]
-}
+}'
 ```
 
 ### Storage
 
-- ENDPOINT: http://localhost:8080/storages
-- HEADERS: `csm-key` is required
-- BODY:
-```json
+```bash
+curl -X POST http://localhost:8080/storages -H 'csm-key: <CSM-KEY>' -H 'Content-Type: application/json' -d '
 {
     "title": "migration storage",
     "storage_src": "<STORAGE_SOURCE>",
     "storage_dest": "<STORAGE_DESTINATION>"
-}
+}'
 ```
- 
+
 ### Solutions
 
-- ENDPOINT: http://localhost:8080/solutions
-- HEADERS: `csm-key` is required
-- BODY:
-```json
-{
-    "title": "migration storage",
-    "storage_src": "<STORAGE_SOURCE>",
-    "storage_dest": "<STORAGE_DESTINATION>"
-}
+```bash
+curl -X PATCH http://localhost:8080/solutions -H 'csm-key: <CSM-KEY>'
 ```
-
 
 ## Clean up
 
