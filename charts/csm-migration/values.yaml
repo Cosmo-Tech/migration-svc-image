@@ -1,15 +1,15 @@
 image:
   repository: <image>
   tag: latest
+replicas: 1
+nodeSize: "basic"
 resources:
   limits:
-    cpu: "1"
-    memory: 256Mi
+    cpu: "30"
+    memory: 50Gb
   requests:
-    cpu: "1"
-    memory: 256Mi
-nodeSize: "basic"
-replicas: 1
+    cpu: "15"
+    memory: 25Gb
 env:
   SRC_CLUSTER: <SRC_CLUSTER_URI> e.g. https://<CLUSTER_NAME>.<LOCATION>.kusto.windows.net
   SRC_RESOURCE_GROUP: <SRC_RESOURCE_GROUP_NAME>

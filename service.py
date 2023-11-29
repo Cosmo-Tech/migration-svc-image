@@ -48,7 +48,9 @@ def kustotest(request: Request, body: BodyKusto):
             rows_dest = count_dest_table(database=db, table=t)
             rows_src = count_src_table(database=db, table=t)
             if rows_dest[0]-rows_src[0]:
-                _ret.append(f"{t} diff {rows_dest[0]-rows_src[0]}")
+                _ret.append(f"{t} dif {rows_dest[0]-rows_src[0]}")
+        if not len(_ret):
+            print(f"Successfully migrated database: {db}")
     return {"result": _ret}
 
 
