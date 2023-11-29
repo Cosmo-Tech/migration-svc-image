@@ -241,6 +241,7 @@ def clone_database(
             except Exception as exp:
                 print(exp)
                 continue
+        return True
 
 
 def ingest_data(
