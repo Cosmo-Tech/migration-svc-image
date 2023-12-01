@@ -33,33 +33,74 @@
 helm pull oci://ghcr.io/cosmo-tech/migration-svc-charts --version <version>
 ```
 
+## Setup variables
+
+```bash
+export K8S_NAMESPACE=<NAMESPACE>
+export REPLICAS=
+export MIGRATION_IMAGE_VERSION=<MIGRATION_IMAGE_VERSION>
+
+export SRC_CLUSTER=<SOURCE_CLUSTER_URI> 
+export SRC_RESOURCE_GROUP=
+export SRC_ACCOUNT_KEY=
+
+export DEST_CLUSTER=<DEST_CLUSTER_URI>
+export DEST_RESOURCE_GROUP=
+export DEST_ACCOUNT_KEY=
+
+export MIGRATION_CLIENT_ID=
+export MIGRATION_CLIENT_SECRET=
+export AZURE_SUBSCRIPTION_ID=
+export AZURE_TENANT_ID=
+
+export ACCOUNT_EXPORT_NAME=
+export ACCOUNT_EXPORT_SECRET=
+
+export REDIS_HOST=<REDIS_SERVICE_NAME>.<NAMESPACE>.svc.cluster.local
+export REDIS_PORT=6379
+export REDIS_USERNAME=default
+export REDIS_PASSWORD=
+export CSM_KEY=
+```
+
 ## Fill values.yaml
 
 * Create a values.yaml with environment variables
 
 ```yaml
+cat >values.yaml <<EOF
 image:
   repository: ghcr.io/cosmo-tech/migration-svc-image
-  tag: <version>
+  tag: $MIGRATION_IMAGE_VERSION
+replicas: $REPLICAS
+nodeSize: "highcpu"
+resources:
+  limits:
+    cpu: "30"
+    memory: 50Gb
+  requests:
+    cpu: "15"
+    memory: 25Gb
 env:
-  SRC_CLUSTER: <SRC_CLUSTER_URI> e.g. https://<CLUSTER_NAME>.<LOCATION>.kusto.windows.net
-  SRC_RESOURCE_GROUP: <SRC_RESOURCE_GROUP_NAME>
-  SRC_ACCOUNT_KEY: <SRC_ACCOUNT_KEY> 
-  DEST_CLUSTER: <DEST_CLUSTER_URI> e.g. https://<CLUSTER_NAME>.<LOCATION>.kusto.windows.net 
-  DEST_RESOURCE_GROUP: <DEST_RESOURCE_GROUP_NAME> 
-  DEST_ACCOUNT_KEY: <DEST_ACCOUNT_KEY> 
-  MIGRATION_CLIENT_ID: <MIGRATION_CLIENT_ID> 
-  MIGRATION_CLIENT_SECRET: <MIGRATION_CLIENT_SECRET> 
-  AZURE_SUBSCRIPTION_ID: <AZURE_SUBSCRIPTION_ID> 
-  AZURE_TENANT_ID: <AZURE_TENANT_ID> 
-  ACCOUNT_EXPORT_NAME: <ACCOUNT_EXPORT_NAME> 
-  ACCOUNT_EXPORT_SECRET: <ACCOUNT_EXPORT_SECRET> 
-  REDIS_HOST: <REDIS_HOST> e.g. <REDIS_SERVICE_NAME>.<NAMESPACE>.svc.cluster.local 
-  REDIS_PORT: <REDIS_PORT>
-  REDIS_USERNAME: <REDIS_USERNAME> 
-  REDIS_PASSWORD: <REDIS_PASSWORD> 
-  CSM_KEY: <CSM_KEY>
-  ```
+  SRC_CLUSTER: $SRC_CLUSTER
+  SRC_RESOURCE_GROUP: $SRC_RESOURCE_GROUP
+  SRC_ACCOUNT_KEY: $SRC_ACCOUNT_KEY
+  DEST_CLUSTER: $DEST_CLUSTER 
+  DEST_RESOURCE_GROUP: $DEST_RESOURCE_GROUP 
+  DEST_ACCOUNT_KEY: $DEST_ACCOUNT_KEY
+  MIGRATION_CLIENT_ID: $MIGRATION_CLIENT_ID 
+  MIGRATION_CLIENT_SECRET: $MIGRATION_CLIENT_SECRET 
+  AZURE_SUBSCRIPTION_ID: $AZURE_SUBSCRIPTION_ID
+  AZURE_TENANT_ID: $AZURE_TENANT_ID
+  ACCOUNT_EXPORT_NAME: $ACCOUNT_EXPORT_NAME 
+  ACCOUNT_EXPORT_SECRET: $ACCOUNT_EXPORT_SECRET 
+  REDIS_HOST: $REDIS_HOST
+  REDIS_PORT: $REDIS_PORT
+  REDIS_USERNAME: $REDIS_USERNAME  
+  REDIS_PASSWORD: $REDIS_PASSWORD 
+  CSM_KEY: $CSM_KEY
+EOF
+```
 
 ## Install helm chart in destination AKS cluster
 
@@ -67,63 +108,40 @@ env:
 kubectl config use-context <context>
 ```
 ```bash
-helm -n <namespace> install -f values.yaml csm-migration-svc migration-svc-charts-<version>.tgz
+helm -n $K8S_NAMESPACE install -f values.yaml csm-migration-svc migration-svc-charts-$MIGRATION_IMAGE_VERSION.tgz
 ```
 
-### Storage
----
+## Port forwarding
 
-* Port forwarding
+
 ```bash
-namespace=<NAMESPACE>
-mypod=$(kubectl -n $namespace get pods | grep csm-deployment | awk 'NR==1{print $1}')
-kubectl port-forward -n $namespace pod/$mypod  8081:8000
+./forwarding.sh
 ```
 
-* Run script
 ```bash
-curl -X POST http://localhost:8081/storages -H 'csm-key: <CSM-KEY>' -H 'Content-Type: application/json' -d '{
-  "title": "migration storage", 
-  "storage_src": "<STORAGE_NAME_SOURCE>", 
-  "storage_dest": "STORAGE_NAME_DEST"
-}'
+curl -X POST http://localhost:PORT/storages -H "csm-key: ${CSM_KEY}"
 ```
 
-### Solutions
+## Solutions
 
-* Port forwarding
 ```bash
-namespace=<NAMESPACE>
-mypod=$(kubectl -n $namespace get pods | grep csm-deployment | awk 'NR==2{print $1}')
-kubectl port-forward -n $namespace pod/$mypod  8082:8000
+curl -X PATCH http://localhost:PORT/solutions -H "csm-key: ${CSM_KEY}"
 ```
 
-* Run script
-```bash
-curl -X PATCH http://localhost:8082/solutions -H 'csm-key: <CSM-KEY>'
-```
-
-### Kusto
+## Kusto
 
 * List kusto databases from adx cluster source
 
 ```bash
-az kusto database list --cluster-name <MyCluster> --resource-group <MyResourceGroup> -o json --query "[].name" > kustos.databases.json
+az kusto database list --cluster-name <MyClusterName> --resource-group <MyResourceGroup> -o json --query "[].name" > kustos.databases.json
 ```
 ```bash
-# remove <MyCluster> string
+# remove <MyClusterName> string
 sed -i 's/<MyCluster>\///g' kustos.databases.json
 ```
 
-* Port forwarding
-  ```bash
-  namespace=<NAMESPACE>
-  mypod=$(kubectl -n $namespace get pods | grep csm-deployment | awk 'NR==3{print $1}')
-  kubectl port-forward -n $namespace pod/$mypod  8083:8000
-  ```
-* Run script
 ```bash
-curl -X POST http://localhost:8083/kustos -H 'csm-key: <CSM-KEY>' -H 'Content-Type: application/json' -d '{
+curl -X POST http://localhost:PORT/kustos -H "csm-key: ${CSM_KEY}" -H 'Content-Type: application/json' -d '{
     "title": "migration kusto database",
     "steps": [
         "--kusto-iam",
@@ -149,5 +167,5 @@ curl -X POST http://localhost:8083/kustos -H 'csm-key: <CSM-KEY>' -H 'Content-Ty
 
 * Uninstall service
 ```bash
-helm -n <namespace> uninstall csm-migration-svc
+helm -n $K8S_NAMESPACE uninstall csm-migration-svc
 ```
