@@ -70,14 +70,14 @@ image:
   repository: ghcr.io/cosmo-tech/migration-svc-image
   tag: $MIGRATION_IMAGE_VERSION
 replicaCount: $REPLICAS
-nodeSize: "highcpu"
+nodeSize: highcpu
 resources:
   limits:
     cpu: "30"
-    memory: 50Gb
+    memory: "50Gb"
   requests:
     cpu: "15"
-    memory: 25Gb
+    memory: "25Gb"
 env:
   SRC_CLUSTER: $SRC_CLUSTER
   SRC_RESOURCE_GROUP: $SRC_RESOURCE_GROUP
