@@ -5,7 +5,7 @@ metadata:
   labels:
     app: csmmigration
 spec:
-  replicas: {{ .Values.replicas }}
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: csmmigration
@@ -20,7 +20,7 @@ spec:
         operator: Equal
         value: cosmotech
       nodeSelector:
-        cosmotech.com/size: {{ .Values.nodeSize }}
+        cosmotech.com/size: "{{ .Values.nodeSize }}"
       containers:
       - name: csmmigration
         imagePullPolicy: IfNotPresent

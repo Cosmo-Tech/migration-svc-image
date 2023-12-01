@@ -69,7 +69,7 @@ cat >values.yaml <<EOF
 image:
   repository: ghcr.io/cosmo-tech/migration-svc-image
   tag: $MIGRATION_IMAGE_VERSION
-replicas: $REPLICAS
+replicaCount: $REPLICAS
 nodeSize: "highcpu"
 resources:
   limits:
@@ -112,7 +112,7 @@ kubectl config use-context $K8S_CONTEXT
 ```
 ```bash
 helm -n $K8S_NAMESPACE install \
-  -f values.yaml csm-migration-svc migration-svc-charts-$MIGRATION_IMAGE_VERSION.tgz
+  -f values.yaml csm-migration-svc migration-svc-charts-1.0.x.tgz
 ```
 
 ## Port forwarding
