@@ -112,7 +112,7 @@ kubectl config use-context $K8S_CONTEXT
 ```
 ```bash
 helm -n $K8S_NAMESPACE install \
-  -f values.yaml csm-migration-svc migration-svc-charts-1.0.x.tgz
+  -f values.yaml csm-migration-svc migration-svc-charts-$MIGRATION_IMAGE_VERSION.tgz
 ```
 
 ## Port forwarding
