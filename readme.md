@@ -118,6 +118,9 @@ helm -n $K8S_NAMESPACE install \
 ## Port forwarding
 
 ```bash
+chmod +x forwarding.sh
+```
+```bash
 ./forwarding.sh
 ```
 

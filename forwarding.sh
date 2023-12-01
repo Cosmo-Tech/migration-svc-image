@@ -16,8 +16,7 @@ do
     if [[ $mypod  != "" ]]; then
         echo $mypod
         port=$((8080+i))
-        kubectl port-forward -n $K8S_NAMESPACE pod/$mypod  $port:8000 &
-        echo -n "port-forward 8000 -> $port"
+        kubectl port-forward -n $K8S_NAMESPACE pod/$mypod $port:8000 &
     else
         echo "pod not found"
     fi
