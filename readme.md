@@ -74,10 +74,10 @@ nodeSize: highcpu
 resources:
   limits:
     cpu: "30"
-    memory: "50Gb"
+    memory: "50Gi"
   requests:
     cpu: "15"
-    memory: "25Gb"
+    memory: "25Gi"
 env:
   SRC_CLUSTER: $SRC_CLUSTER
   SRC_RESOURCE_GROUP: $SRC_RESOURCE_GROUP

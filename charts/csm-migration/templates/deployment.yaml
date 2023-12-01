@@ -20,7 +20,7 @@ spec:
         operator: Equal
         value: cosmotech
       nodeSelector:
-        cosmotech.com/size: "{{ .Values.nodeSize }}"
+        cosmotech.com/size: {{ .Values.nodeSize }}
       containers:
       - name: csmmigration
         imagePullPolicy: IfNotPresent
