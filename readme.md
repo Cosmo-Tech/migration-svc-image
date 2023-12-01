@@ -27,20 +27,17 @@
 ## Create a storage account
 * You will need the name and secret key value later
 
-## Pull helm chart 
-
-```bash
-helm pull oci://ghcr.io/cosmo-tech/migration-svc-charts --version <version>
-```
 
 ## Setup variables
 
 ```bash
 export K8S_NAMESPACE=<NAMESPACE>
+export K8S_CONTEXT=
 export REPLICAS=
 export MIGRATION_IMAGE_VERSION=<MIGRATION_IMAGE_VERSION>
 
-export SRC_CLUSTER=<SOURCE_CLUSTER_URI> 
+export SRC_CLUSTER=<SOURCE_CLUSTER_URI>
+export SRC_CLUSTER_NAME=
 export SRC_RESOURCE_GROUP=
 export SRC_ACCOUNT_KEY=
 
@@ -102,21 +99,29 @@ env:
 EOF
 ```
 
+## Pull helm chart 
+
+```bash
+helm pull oci://ghcr.io/cosmo-tech/migration-svc-charts --version $MIGRATION_IMAGE_VERSION
+```
+
 ## Install helm chart in destination AKS cluster
 
 ```bash
-kubectl config use-context <context>
+kubectl config use-context $K8S_CONTEXT
 ```
 ```bash
-helm -n $K8S_NAMESPACE install -f values.yaml csm-migration-svc migration-svc-charts-$MIGRATION_IMAGE_VERSION.tgz
+helm -n $K8S_NAMESPACE install \
+  -f values.yaml csm-migration-svc migration-svc-charts-$MIGRATION_IMAGE_VERSION.tgz
 ```
 
 ## Port forwarding
 
-
 ```bash
 ./forwarding.sh
 ```
+
+## Storages
 
 ```bash
 curl -X POST http://localhost:PORT/storages -H "csm-key: ${CSM_KEY}"
@@ -133,15 +138,18 @@ curl -X PATCH http://localhost:PORT/solutions -H "csm-key: ${CSM_KEY}"
 * List kusto databases from adx cluster source
 
 ```bash
-az kusto database list --cluster-name <MyClusterName> --resource-group <MyResourceGroup> -o json --query "[].name" > kustos.databases.json
+az kusto database list --cluster-name $SRC_CLUSTER_NAME \
+  --resource-group $SRC_RESOURCE_GROUP -o json --query "[].name" > kustos.databases.json
 ```
 ```bash
 # remove <MyClusterName> string
-sed -i 's/<MyCluster>\///g' kustos.databases.json
+sed -i "s/$SRC_CLUSTER_NAME\///g" kustos.databases.json
 ```
 
 ```bash
-curl -X POST http://localhost:PORT/kustos -H "csm-key: ${CSM_KEY}" -H 'Content-Type: application/json' -d '{
+curl -X POST http://localhost:PORT/kustos \
+  -H "csm-key: ${CSM_KEY}" \
+  -H 'Content-Type: application/json' -d '{
     "title": "migration kusto database",
     "steps": [
         "--kusto-iam",
