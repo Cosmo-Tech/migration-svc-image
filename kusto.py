@@ -613,6 +613,7 @@ def run_kusto(body: BodyKusto):
             ok = check_database_in_dest(database=db)
             if ok:
                 print(f"{db} already exists")
+                continue
             else:
                 create_kusto_database_in_dest(database=db)
                 print("successfully created")
