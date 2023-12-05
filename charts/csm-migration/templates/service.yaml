@@ -5,9 +5,7 @@ metadata:
 spec:
   ports:
     - port: 31001
-      nodePort: 31001
       targetPort: csm-port
       protocol: TCP
   selector:
     app: csmmigration
-  type: NodePort

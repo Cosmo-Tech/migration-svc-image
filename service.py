@@ -1,8 +1,7 @@
+import os
 from uvicorn import run
-from multiprocessing import Process
-from multiprocessing import set_start_method
 from fastapi import FastAPI, Request
-from common import BodyKusto, BodyStorage
+from common import BodyKusto, BodyKustoTest, BodyStorage
 from kusto import run_kusto
 from kusto_test import count_dest_table
 from kusto_test import count_src_table
@@ -18,23 +17,27 @@ app = FastAPI()
 def storage(request: Request, body: BodyStorage):
     if "Csm-Key" not in request.headers:
         return {"error": "csm-key"}
-    p = Process(target=run_storage, args=(body,))
-    p.start()
-    return {"result": body}
+    if request.headers['Csm-Key'] != os.environ.get('CSM_KEY'):
+        return {"error": "csm-key"}
+    run_storage(body)
+    return {"result": 'OK'}
 
 
 @app.post("/kustos")
 def kusto(request: Request, body: BodyKusto):
     if "Csm-Key" not in request.headers:
         return {"error": "csm-key"}
-    p = Process(target=run_kusto, args=(body,))
-    p.start()
-    return {"result": body}
+    if request.headers['Csm-Key'] != os.environ.get('CSM_KEY'):
+        return {"error": "csm-key"}
+    run_kusto(body)
+    return {"result": 'OK'}
 
 
 @app.post("/kustos/test")
-def kustotest(request: Request, body: BodyKusto):
+def kustotest(request: Request, body: BodyKustoTest):
     if "Csm-Key" not in request.headers:
+        return {"error": "csm-key"}
+    if request.headers['Csm-Key'] != os.environ.get('CSM_KEY'):
         return {"error": "csm-key"}
     if not len(body.databases):
         return {"result": None}
@@ -58,11 +61,12 @@ def kustotest(request: Request, body: BodyKusto):
 def solution(request: Request):
     if "Csm-Key" not in request.headers:
         return {"error": "csm-key"}
+    if request.headers['Csm-Key'] != os.environ.get('CSM_KEY'):
+        return {"error": "csm-key"}
     client = CsmJsonRedisClient()
     solutions = handler(client)
-    return solutions
+    return {"result": solutions}
 
 
 if __name__ == "__main__":
-    set_start_method("spawn")
     run(app=app)

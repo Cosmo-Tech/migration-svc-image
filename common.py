@@ -42,3 +42,8 @@ class BodyKusto(BaseModel):
     title: str
     steps: list
     databases: list
+
+
+class BodyKustoTest(BaseModel):
+    title: str
+    databases: list
