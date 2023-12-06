@@ -267,7 +267,7 @@ def ingest_data(
                 data = response.primary_results[0].to_dict()
                 for d in data['data']:
                     if d['HasErrors']:
-                        sys.exit(1)
+                        return False
                 return True
         except Exception as exp:
             print(f"Error: {exp}")
@@ -648,3 +648,4 @@ def run_kusto(body: BodyKusto):
                         print("successfully ingested")
                 except Exception:
                     continue
+            print("Completed")

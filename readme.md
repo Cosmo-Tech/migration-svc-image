@@ -40,10 +40,12 @@ export SRC_CLUSTER=<SOURCE_CLUSTER_URI>
 export SRC_CLUSTER_NAME=
 export SRC_RESOURCE_GROUP=
 export SRC_ACCOUNT_KEY=
+export SRC_STORAGE_NAME=
 
 export DEST_CLUSTER=<DEST_CLUSTER_URI>
 export DEST_RESOURCE_GROUP=
 export DEST_ACCOUNT_KEY=
+export DEST_STORAGE_NAME=
 
 export MIGRATION_CLIENT_ID=
 export MIGRATION_CLIENT_SECRET=
@@ -105,14 +107,13 @@ EOF
 helm pull oci://ghcr.io/cosmo-tech/migration-svc-charts --version $MIGRATION_IMAGE_VERSION
 ```
 
-## Install helm chart in destination AKS cluster
+## Install helm chart
 
 ```bash
 kubectl config use-context $K8S_CONTEXT
 ```
 ```bash
-helm -n $K8S_NAMESPACE install \
-  -f values.yaml csm-migration-svc migration-svc-charts-$MIGRATION_IMAGE_VERSION.tgz
+helm -n $K8S_NAMESPACE install -f values.yaml csm-migration-svc migration-svc-charts-$MIGRATION_IMAGE_VERSION.tgz
 ```
 
 ## Clean up
