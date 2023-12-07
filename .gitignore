@@ -1,7 +1,5 @@
 *.tgz
 .env
 *.local.*
-test.*
 *.json
 values.*
-*.sh
