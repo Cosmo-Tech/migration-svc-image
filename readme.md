@@ -123,7 +123,7 @@ kubectl port-forward svc/csm-service 8000:31001 -n $K8S_NAMESPACE &
 
 ### 7.1 blob migration
 ```bash
-wget https://github.com/Cosmo-Tech/migration-svc-image/blob/main/scripts/storage.sh
+wget https://raw.githubusercontent.com/Cosmo-Tech/migration-svc-image/main/scripts/storage.sh
 ```
 ```bash
 chmod +x storage.sh
@@ -132,7 +132,7 @@ chmod +x storage.sh
 
 ### 7.2 Cosmo-Tech Solutions
 ```bash
-wget https://github.com/Cosmo-Tech/migration-svc-image/blob/main/scripts/solution.sh
+wget https://raw.githubusercontent.com/Cosmo-Tech/migration-svc-image/main/scripts/solution.sh
 ```
 ```bash
 chmod +x solution.sh
@@ -141,7 +141,7 @@ chmod +x solution.sh
 
 ### 7.3 Kusto migration
 ```bash
-wget https://github.com/Cosmo-Tech/migration-svc-image/blob/main/scripts/kusto.sh
+wget https://raw.githubusercontent.com/Cosmo-Tech/migration-svc-image/main/scripts/kusto.sh
 ```
 ```bash
 chmod +x kusto.sh
