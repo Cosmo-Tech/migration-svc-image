@@ -33,7 +33,6 @@
 ```bash
 export K8S_NAMESPACE=<NAMESPACE>
 export K8S_CONTEXT=
-export REPLICAS=
 export MIGRATION_IMAGE_VERSION=<MIGRATION_IMAGE_VERSION>
 
 export SRC_CLUSTER=<SOURCE_CLUSTER_URI>
@@ -73,7 +72,6 @@ cat >values.yaml <<EOF
 image:
   repository: ghcr.io/cosmo-tech/migration-svc-image
   tag: $MIGRATION_IMAGE_VERSION
-replicaCount: $REPLICAS
 nodeSize: highmemory
 resources:
   limits:
