@@ -1,3 +1,4 @@
+from multiprocessing import Process
 import os
 from uvicorn import run
 from fastapi import FastAPI, Request
@@ -19,7 +20,8 @@ def storage(request: Request, body: BodyStorage):
         return {"error": "csm-key"}
     if request.headers['Csm-Key'] != os.environ.get('CSM_KEY'):
         return {"error": "csm-key"}
-    run_storage(body)
+    p = Process(target=run_storage, args=(body,))
+    p.start()
     return {"result": 'OK'}
 
 
@@ -29,7 +31,8 @@ def kusto(request: Request, body: BodyKusto):
         return {"error": "csm-key"}
     if request.headers['Csm-Key'] != os.environ.get('CSM_KEY'):
         return {"error": "csm-key"}
-    run_kusto(body)
+    p = Process(target=run_kusto, args=(body,))
+    p.start()
     return {"result": 'OK'}
 
 
@@ -53,7 +56,7 @@ def kustotest(request: Request, body: BodyKustoTest):
             if rows_dest[0]-rows_src[0]:
                 _ret.append(f"{t} dif {rows_dest[0]-rows_src[0]}")
         if not len(_ret):
-            print(f"Successfully migrated database: {db}")
+            print(f"Successfully migrated: {db}")
     return {"result": _ret}
 
 
