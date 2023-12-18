@@ -5,8 +5,8 @@
 * `helm`
 * `docker`
 * `k9s`
-* `Destination AKS cluster running`
-* `Destination ADX cluster running`
+* `Verify that the cluster AKS is running`
+* `Verify that the cluster ADX is running`
 * `Create an app registration in azure portal`
     * Sign in to the Azure portal
     * Navigate to the Azure portal and select the Azure AD service
@@ -117,6 +117,7 @@ helm -n $K8S_NAMESPACE install -f values.yaml csm-migration-svc migration-svc-ch
 ## 6.0 Port forwarding service
 ```bash
 kubectl port-forward svc/csm-service 8000:31001 -n $K8S_NAMESPACE &
+# Press Ctrl + C to return to the command prompt while port-forwarding runs in the background.
 ```
 
 ## 7.0 Run scripts
@@ -150,11 +151,14 @@ chmod +x kusto.sh
 
 ## 8.0 Troubleshooting
 
+If you have any issue during data migration, specifically with Azure Data Explorer.
+
 ### 8.1 Re-install service
 ```bash
 helm -n $K8S_NAMESPACE uninstall csm-migration-svc
 helm -n $K8S_NAMESPACE install -f values.yaml csm-migration-svc migration-svc-charts-$MIGRATION_IMAGE_VERSION.tgz
 kubectl port-forward svc/csm-service 8000:31001 -n $K8S_NAMESPACE &
+# Press Ctrl + C to return to the command prompt while port-forwarding runs in the background.
 ```
 
 ### 8.2 Run the script that ended up with problems

@@ -1,4 +1,3 @@
-from multiprocessing import Process
 import os
 from uvicorn import run
 from fastapi import FastAPI, Request
@@ -18,42 +17,38 @@ app = FastAPI()
 def storage(request: Request, body: BodyStorage):
     if "Csm-Key" not in request.headers:
         return {"error": "csm-key"}
-    if request.headers['Csm-Key'] != os.environ.get('CSM_KEY'):
+    if request.headers["Csm-Key"] != os.environ.get("CSM_KEY"):
         return {"error": "csm-key"}
-    p = Process(target=run_storage, args=(body,))
-    p.start()
-    return {"result": 'OK'}
+    run_storage(body)
+    return {"result": "OK"}
 
 
 @app.post("/kustos")
 def kusto(request: Request, body: BodyKusto):
     if "Csm-Key" not in request.headers:
         return {"error": "csm-key"}
-    if request.headers['Csm-Key'] != os.environ.get('CSM_KEY'):
+    if request.headers["Csm-Key"] != os.environ.get("CSM_KEY"):
         return {"error": "csm-key"}
-    p = Process(target=run_kusto, args=(body,))
-    p.start()
-    return {"result": 'OK'}
+    run_kusto(body)
+    return {"result": "OK"}
 
 
 @app.post("/kustos/test")
 def kustotest(request: Request, body: BodyKustoTest):
     if "Csm-Key" not in request.headers:
         return {"error": "csm-key"}
-    if request.headers['Csm-Key'] != os.environ.get('CSM_KEY'):
+    if request.headers["Csm-Key"] != os.environ.get("CSM_KEY"):
         return {"error": "csm-key"}
     if not len(body.databases):
         return {"result": None}
     databases = body.databases
     for db in databases:
-        tables_dest = get_dest_tables_from_adx(
-            database=db
-        )
+        tables_dest = get_dest_tables_from_adx(database=db)
         _ret = []
         for t in tables_dest:
             rows_dest = count_dest_table(database=db, table=t)
             rows_src = count_src_table(database=db, table=t)
-            if rows_dest[0]-rows_src[0]:
+            if rows_dest[0] - rows_src[0]:
                 _ret.append(f"{t} dif {rows_dest[0]-rows_src[0]}")
         if not len(_ret):
             print(f"Successfully migrated: {db}")
@@ -64,7 +59,7 @@ def kustotest(request: Request, body: BodyKustoTest):
 def solution(request: Request):
     if "Csm-Key" not in request.headers:
         return {"error": "csm-key"}
-    if request.headers['Csm-Key'] != os.environ.get('CSM_KEY'):
+    if request.headers["Csm-Key"] != os.environ.get("CSM_KEY"):
         return {"error": "csm-key"}
     client = CsmJsonRedisClient()
     solutions = handler(client)
